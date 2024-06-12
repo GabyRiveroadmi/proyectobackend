@@ -51,7 +51,8 @@ const product = [
     ];
 
 
-    
+
+
 // GET: lista los productos de la base con limite de productos:
     
     router.get("/", (req, res) => {
@@ -66,8 +67,8 @@ const product = [
 // GET: trae sólo el producto con el id proporcionado:
 
 
-router.get("/:id", (req, res) => {
-  const id = parseInt(req.params.id);
+router.get("/:pid", (req, res) => {
+  const id = parseInt(req.params.pid);
   const productFound = product.find(p => p.id === id);
 
   if (productFound) {
@@ -104,8 +105,8 @@ router.post("/", (req,res) => {
 
 //PUT: toma un id de producto y actualiza:
 
-router.put("/:id", (req, res) => {
-  const id = parseInt(req.params.id);
+router.put("/:pid", (req, res) => {
+  const id = parseInt(req.params.pid);
   const { title, description, code, price, status, stock, category, thumbnails } = req.body;
 
   const productIndex = product.findIndex(p => p.id === id);
@@ -124,10 +125,10 @@ router.put("/:id", (req, res) => {
 });
 
 
-//DELETE: elimina el producto con el pid indicado:
+//DELETE: elimina el producto con el id indicado:
 
-router.delete("/:id", (req, res) => {
-  const id = parseInt(req.params.id);
+router.delete("/:pid", (req, res) => {
+  const id = parseInt(req.params.pid);
   
   const productIndex = product.findIndex(p => p.id === id);
 
