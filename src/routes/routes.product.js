@@ -1,4 +1,8 @@
+
 import { Router } from "express";
+import { promises as fs } from "fs";
+
+
 const router = Router();
 
 
@@ -49,6 +53,21 @@ const product = [
       }
       
     ];
+
+
+  const archivoProductos = ("./src/fs/productos.json");
+
+  const guardarArchivo = async (array) => {
+      await fs.writeFile(archivoProductos, JSON.stringify(array, null, 2));}
+  
+  guardarArchivo(product);
+  
+  const leerArchivos = async () => {
+    const respuesta = await fs.readFile(archivoProductos, "utf-8");
+    const arrayNuevoProducto = JSON.parse(respuesta);
+    console.log(arrayNuevoProducto);}
+
+leerArchivos();
 
 
 
@@ -140,6 +159,8 @@ router.delete("/:pid", (req, res) => {
   }
 });
 
+
+leerArchivos();
 
 
 export default router

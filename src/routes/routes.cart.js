@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { promises as fs } from "fs";
 
 const router = Router();
 
@@ -87,6 +88,27 @@ const cart = [
 ];
 
 
+const archivoCarrito = ("./src/fs/carrito.json");
+
+  const guardarArchivo = async (array) => {
+      await fs.writeFile(archivoCarrito, JSON.stringify(array, null, 2));
+    }
+  
+  guardarArchivo(cart);
+  
+  const leerArchivos = async () => {
+    const respuesta = await fs.readFile(archivoCarrito, "utf-8");
+    const arrayNuevoCarrito = JSON.parse(respuesta);
+    console.log(arrayNuevoProducto);
+}
+
+leerArchivos();
+  
+
+
+
+
+
 //Lista de todos los carritos:
 
 router.get("/", (req, res) => {
@@ -158,6 +180,8 @@ router.post("/:cid/product/:pid", (req, res) => {
     res.status(500).send({ status: "error", message: "Error al agregar producto al carrito" });
   }
 });
+
+
 
 
 
