@@ -33,14 +33,13 @@
     "thumbnails": "https://dcdn.mitiendanube.com/stores/004/210/064/products/imagen_2022-08-23_1736302791-ef7ca4d4558edf1b0f16612870043544-640-0.png"
   },
   {
-    "id": 4,
-    "title": "Molde Silicona Rectangular Budinera",
-    "description": "Molde 100% de silicona irrompible, higiénicos, NO fijan los olores ni el gusto, fácil de limpiar, sirve para Horno, microondas, freezer, heladera.",
+    "id": 5,
+    "title": "Infusor De Te En Hebras Acero Inoxidable",
+    "description": "Infusor De Te En Hebras Acero Inoxidable",
     "code": 1,
-    "price": 3950,
+    "price": 3000,
     "status": true,
-    "stock": 2,
-    "category": "Cocina",
-    "thumbnails": "https://dcdn.mitiendanube.com/stores/004/210/064/products/budi1-768bd39acf3f3e053a16612824209231-640-0.png"
+    "stock": 8,
+    "category": "Cocina"
   }
 ]
