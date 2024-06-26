@@ -1,176 +1,103 @@
-import { Router } from "express";
-import { promises as fs } from "fs";
+import express from "express";
+const router = express.Router();
 
-const router = Router();
+import ProductManager from "../controllers/product-manager.js";
+const productManager = new ProductManager("./src/fs/productos.json");
 
-const archivoProducto = "./src/fs/productos.json";
-
-
-const leerArchivos = async () => {
-  try {
-    const respuesta = await fs.readFile(archivoProducto, "utf-8");
-    return JSON.parse(respuesta);
-  } catch (error) {
-    console.error("Error leyendo el archivo:", error);
-    return [];
-  }
-};
-
-
-const guardarArchivo = async (productos) => {
-  try {
-    await fs.writeFile(archivoProducto, JSON.stringify(productos, null, 2));
-  } catch (error) {
-    console.error("Error guardando el archivo:", error);
-  }
-};
-
-
-const inicializarArchivo = async () => {
-  try {
-    await fs.access(archivoProducto);
-  } catch {
-    
-    
-    const product = [
-      {
-        id: 1,
-        title: "Rociador Aceite Spray Aceto Cocina Condimento Pulverizador", 
-        description: "Pulverizador de aceite multiusos. Diseño transparente y de doble escala",
-        code: 1,
-        price: 2896,
-        status: true,
-        stock: 10,
-        category: "Cocina", 
-        thumbnails: "https://dcdn.mitiendanube.com/stores/004/210/064/products/81-ca16fabcd87e937fff16862379215389-480-0-93c082f6ef2e981ab217095802747272-1024-1024.webp"
-      },
-      {
-        id: 2,
-        title: "Cuchara Silicona Mango Madera Reposteria Cocina 30cm", 
-        description: "Cuchara silicona mango madera. Longitud aprox. 30 cm.Colores: Rosa, Violeta, Verde, Celeste.",
-        code: 2,
-        price: 2175,
-        status: true,
-        stock: 5,
-        category: "Cocina", 
-        thumbnails: "https://dcdn.mitiendanube.com/stores/004/210/064/products/imagen_2022-08-23_1611012051-c8ddba7dfb0a88ee8a16612818902581-640-0.png"
-      },
-      {
-        id: 3,
-        title: "Infusor De Te En Hebras Acero Inoxidable", 
-        description: "Infusor De Te En Hebras Acero Inoxidable",
-        code: 1,
-        price: 2237,
-        status: true,
-        stock: 8,
-        category: "Cocina", 
-        thumbnails: "https://dcdn.mitiendanube.com/stores/004/210/064/products/imagen_2022-08-23_1736302791-ef7ca4d4558edf1b0f16612870043544-640-0.png"
-      },
-      {
-        id: 4,
-        title: "Molde Silicona Rectangular Budinera", 
-        description: "Molde 100% de silicona irrompible, higiénicos, NO fijan los olores ni el gusto, fácil de limpiar, sirve para Horno, microondas, freezer, heladera.",
-        code: 1,
-        price: 3950,
-        status: true,
-        stock: 2,
-        category: "Cocina", 
-        thumbnails: "https://dcdn.mitiendanube.com/stores/004/210/064/products/budi1-768bd39acf3f3e053a16612824209231-640-0.png"
-      }
-    ];
-    await guardarArchivo(product);
-  }
-};
-
-
-
-inicializarArchivo();
-
-// GET: lista los productos de la base con limite de productos
+//Listar los productos 
 
 router.get("/", async (req, res) => {
-  const productos = await leerArchivos();
-  const limit = parseInt(req.query.limit) || 5;
-  const limitedProducts = productos.slice(0, limit);
-
-  res.json({ mensaje: "Sección con 5 productos", productos: limitedProducts });
+     try {
+     const limit = req.query.limit;
+     const productos = await productManager.getProducts();
+        if (limit) {
+            res.json(productos.slice(0, limit));
+        } else {
+            res.json(productos);
+        }
+    } catch (error) {
+        console.error("Error al obtener productos", error);
+        res.status(500).json({
+            error: "Error interno del servidor"
+        });
+    }
 });
 
-// GET: trae sólo el producto con el id solicitado
+//Producto por id
 
 router.get("/:pid", async (req, res) => {
-  const id = parseInt(req.params.pid);
-  const productos = await leerArchivos();
-  const productFound = productos.find(p => p.id === id);
+    const id = req.params.pid;
 
-  if (productFound) {
-    res.json(productFound);
-  } else {
-    res.status(404).json({ error: "El id no existe" });
-  }
+    try {
+        const producto = await productManager.getProductById(parseInt(id));
+        if (!producto) {
+            return res.json({
+                error: "Producto no encontrado"
+            });
+        }
+
+        res.json(producto);
+    } catch (error) {
+        console.error("Error al obtener producto", error);
+        res.status(500).json({
+            error: "Error interno del servidor"
+        });
+    }
 });
 
-// POST: agrega un nuevo producto con todos los campos con id correlativo
+//Agregar nuevo producto
 
 router.post("/", async (req, res) => {
-  const { title, description, code, price, status, stock, category, thumbnails } = req.body;
+    const nuevoProducto = req.body;
 
-  if (!title || !description || !code || !price || !status || !stock || !category) {
-    res.status(400).json({ error: "Todos los campos son obligatorios" });
-    return;
-  }
-
-  const productos = await leerArchivos();
-  const id = productos.length ? productos[productos.length - 1].id + 1 : 1;
-
-  productos.push({ id, title, description, code, price, status, stock, category, thumbnails });
-  await guardarArchivo(productos);
-
-  res.send({ status: "success", message: "Producto creado exitosamente" });
+    try {
+        await productManager.addProduct(nuevoProducto);
+        res.status(201).json({
+            message: "Producto agregado exitosamente"
+        });
+    } catch (error) {
+        console.error("Error al agregar producto", error);
+        res.status(500).json({
+            error: "Error interno del servidor"
+        });
+    }
 });
 
-// PUT: toma un id de producto y actualiza
-
+//Actualizar por ID
 
 router.put("/:pid", async (req, res) => {
-  const id = parseInt(req.params.pid);
-  const { title, description, code, price, status, stock, category, thumbnails } = req.body;
+    const id = req.params.pid;
+    const productoActualizado = req.body;
 
-  const productos = await leerArchivos();
-  const productIndex = productos.findIndex(p => p.id === id);
-
-  if (productIndex !== -1) {
-    const updatedProduct = { ...productos[productIndex], title, description, code, price, status, stock, category, thumbnails };
-    productos[productIndex] = updatedProduct;
-
-    await guardarArchivo(productos);
-
-    res.json({
-      message: "Producto actualizado con éxito",
-      response: updatedProduct
-    });
-  } else {
-    res.status(404).json({ error: "El producto no existe" });
-  }
+    try {
+        await productManager.updateProduct(parseInt(id), productoActualizado);
+        res.json({
+            message: "Producto actualizado exitosamente"
+        });
+    } catch (error) {
+        console.error("Error al actualizar producto", error);
+        res.status(500).json({
+            error: "Error interno del servidor"
+        });
+    }
 });
 
-// DELETE: elimina el producto con el id indicado
-
+//Eliminar un producto
 
 router.delete("/:pid", async (req, res) => {
-  const id = parseInt(req.params.pid);
+    const id = req.params.pid;
 
-  const productos = await leerArchivos();
-  const productIndex = productos.findIndex(p => p.id === id);
-
-  if (productIndex !== -1) {
-    productos.splice(productIndex, 1);
-    await guardarArchivo(productos);
-
-    res.send({ status: "success", message: "Producto eliminado correctamente" });
-  } else {
-    res.status(404).json({ error: "El producto no existe" });
-  }
+    try {
+        await productManager.deleteProduct(parseInt(id));
+        res.json({
+            message: "Producto eliminado exitosamente"
+        });
+    } catch (error) {
+        console.error("Error al eliminar producto", error);
+        res.status(500).json({
+            error: "Error interno del servidor"
+        });
+    }
 });
 
 export default router;

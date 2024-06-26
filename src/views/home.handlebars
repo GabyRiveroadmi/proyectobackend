@@ -1,0 +1,17 @@
+<h1>Productos agregados hasta el momento</h1>
+
+<div class="listaProductos">
+ {{#each productos}}
+  <div>
+    
+    <p> {{this.title}} </p>
+    <p> {{this.description}} </p>
+    <p> {{this.code}} </p>
+    <p> {{this.price}} </p>
+    <p> {{this.stock}} </p>
+    <p> {{this.category}} </p>
+  </div>
+
+ {{/each}}
+
+</div>

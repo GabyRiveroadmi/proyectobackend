@@ -1,153 +1,46 @@
-import { Router } from "express";
-import { promises as fs } from "fs";
+import express from "express";
+import CartManager from "../controllers/cart-manager.js";
 
-const router = Router();
+const router = express.Router();
+const cartManager = new CartManager("./src/fs/carrito.json");
 
-const cart = [
-  {
-    "id": 1,
-    "products": [
-      { "product": "1", "quantity": 2 },
-      { "product": "2", "quantity": 4 },
-      { "product": "3", "quantity": 4 }
-    ]
-  },
-  {
-    "id": 2,
-    "products": [
-      { "product": "1", "quantity": 2 },
-      { "product": "2", "quantity": 3 },
-      { "product": "3", "quantity": 1 }
-    ]
-  },
-  {
-    "id": 3,
-    "products": [
-      { "product": "1", "quantity": 5 },
-      { "product": "2", "quantity": 8 },
-      { "product": "3", "quantity": 2 }
-    ]
-  },
-  {
-    "id": 4,
-    "products": [
-      { "product": "1", "quantity": 1 },
-      { "product": "2", "quantity": 1 },
-      { "product": "3", "quantity": 1 }
-    ]
-  },
-  {
-    "id": 5,
-    "products": [
-      { "product": "1", "quantity": 2 },
-      { "product": "2", "quantity": 2 },
-      { "product": "3", "quantity": 2 }
-    ]
-  }
-];
-
-const archivoCarrito = "./src/fs/carrito.json";
-
-const guardarArchivo = async (array) => {
-  try {
-    await fs.writeFile(archivoCarrito, JSON.stringify(array, null, 2));
-    console.log("Archivo de carrito actualizado");
-  } catch (error) {
-    console.error("Error al guardar el archivo de carrito:", error);
-  }
-};
-
-
-const inicializarArchivo = async () => {
-  try {
-    await fs.access(archivoCarrito);
-  } catch (error) {
-    await guardarArchivo(cart);
-  }
-};
-
-inicializarArchivo();
-
-const leerArchivos = async () => {
-  try {
-    const respuesta = await fs.readFile(archivoCarrito, "utf-8");
-    const arrayNuevoCarrito = JSON.parse(respuesta);
-    console.log("Contenido del archivo de carrito:", arrayNuevoCarrito);
-  } catch (error) {
-    console.error("Error al leer el archivo de carrito:", error);
-  }
-};
-
-leerArchivos();
-
-// Listar todos los carritos
-
-router.get("/", (req, res) => {
-  try {
-    res.status(200).json({ status: "success", carritos: cart });
-  } catch (error) {
-    res.status(500).json({ status: "error", message: "Error al obtener los carritos" });
-  }
-});
-
-// Crear un nuevo carrito
-
-router.post("/", (req, res) => {
-  const nuevoCarrito = req.body;
-
-  try {
-    const lastId = cart.length > 0 ? cart[cart.length - 1].id : 0;
-    nuevoCarrito.id = lastId + 1;
-
-    cart.push(nuevoCarrito);
-    guardarArchivo(cart);
-    res.status(201).send({ message: "Carrito creado exitosamente" });
-
-  } catch (error) {
-    res.status(500).send({ message: "Error al crear el carrito" });
-  }
-});
-
-// Listar el carrito de un id determinado
-
-router.get("/:pid", (req, res) => {
-  const id = parseInt(req.params.pid);
-  const cartFound = cart.find(c => c.id === id);
-
-  if (cartFound) {
-    res.json(cartFound);
-  } else {
-    res.status(404).json({ error: "El id no existe" });
-  }
-});
-
-// Agregar un producto y cantidad al carrito seleccionado
-
-router.post("/:cid/product/:pid", (req, res) => {
-  const cartId = parseInt(req.params.cid);
-  const productId = req.params.pid;
-  const quantity = req.body.quantity || 1;
-
-  try {
-    const cartFound = cart.find(c => c.id === cartId);
-
-    if (!cartFound) {
-      return res.status(404).json({ error: "Carrito no encontrado" });
+// nuevo carrito
+router.post("/", async (req, res) => {
+ try {
+ const nuevoCarrito = await cartManager.crearCarrito();
+ res.json(nuevoCarrito);
+} catch (error) {
+console.error("Error al crear un nuevo carrito", error);
+res.status(500).json({ error: "Error interno del servidor" });
     }
+});
 
-    const productIndex = cartFound.products.findIndex(p => p.product === productId);
+//Listamos los productos de un determinado carrito
+router.get("/:cid", async (req, res) => {
+const cartId = parseInt(req.params.cid);
 
-    if (productIndex !== -1) {
-      cartFound.products[productIndex].quantity += quantity;
-    } else {
-      cartFound.products.push({ product: productId, quantity: quantity });
+try {
+  const carrito = await cartManager.getCarritoById(cartId);
+ res.json(carrito.products);
+ } catch (error) {
+console.error("Error al obtener el carrito", error);
+res.status(500).json({ error: "Error interno del servidor" });
     }
+});
 
-    guardarArchivo(cart);
-    res.json(cartFound.products);
-  } catch (error) {
-    res.status(500).send({ status: "error", message: "Error al agregar producto al carrito" });
-  }
+//Agregar productos a distintos carritos
+router.post("/:cid/product/:pid", async (req, res) => {
+ const cartId = parseInt(req.params.cid);
+ const productId = req.params.pid;
+ const quantity = req.body.quantity || 1;
+
+  try {    
+ const actualizarCarrito = await cartManager.agregarProductoAlCarrito(cartId, productId, quantity);
+res.json(actualizarCarrito.products);
+} catch (error) {
+     console.error("Error al agregar producto al carrito", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+    }
 });
 
 export default router;

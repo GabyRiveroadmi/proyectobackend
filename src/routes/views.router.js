@@ -1,8 +1,21 @@
-import express from "express";
-const router = express.Router(); 
+import { Router } from "express";
+const router = Router(); 
 
-router.get("/", (req, res) => {
-    res.render("index");
+router.get("/realtimeproducts", async (req, res) => {
+    res.render("realtimeproducts");
 })
 
-export default router; 
+import ProductManager from "../controllers/product-manager.js";
+const productManager = new ProductManager ("./src/fs/productos.json");
+
+
+router.get("/", async (req, res) => {
+    try {
+      const productos = await productManager.getProducts();
+      res.render("home", {productos})
+    } catch (error) {
+       res.status(500).send("error interno");
+    }
+})
+
+export default router;
