@@ -59,7 +59,7 @@ router.post("/", async (req, res) => {
     } catch (error) {
         console.error("Error al agregar producto", error);
         res.status(500).json({
-            error: "Error interno del servidor"
+            error: "Error agregar producto"
         });
     }
 });
@@ -78,7 +78,7 @@ router.put("/:pid", async (req, res) => {
     } catch (error) {
         console.error("Error al actualizar producto", error);
         res.status(500).json({
-            error: "Error interno del servidor"
+            error: "Error actualizar producto"
         });
     }
 });
@@ -95,6 +95,26 @@ router.delete("/:pid", async (req, res) => {
         });
     } catch (error) {
         console.error("Error al eliminar producto", error);
+        res.status(500).json({
+            error: "Error al eliminar producto"
+        });
+    }
+});
+
+// Vista del producto por id
+
+router.get("/product/:pid", async (req, res) => {
+    const id = req.params.pid;
+
+    try {
+        const producto = await productManager.getProductById(id);
+        if (!producto) {
+            return res.render("error", { error: "Producto no encontrado" });
+        }
+
+        res.render("product", { producto });
+    } catch (error) {
+        console.error("Error al obtener producto", error);
         res.status(500).json({
             error: "Error interno del servidor"
         });

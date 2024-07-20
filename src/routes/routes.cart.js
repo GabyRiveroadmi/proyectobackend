@@ -39,7 +39,7 @@ router.post("/", async (req, res) => {
     }
 });
 
-//Listar los productos de un carrito (no funciona)
+//Listar los productos de un carrito (ok)
 router.get("/:cid", async (req, res) => {
     const cartId = req.params.cid;
 
@@ -59,7 +59,7 @@ router.get("/:cid", async (req, res) => {
 });
 
 
-//Agregar producto al carrito (no funciona)
+//Agregar producto al carrito (ok)
 
 router.post("/:cid/product/:pid", async (req, res) => {
     const cartId = req.params.cid;
@@ -90,7 +90,7 @@ router.delete("/:cid/product/:pid", async (req, res) => {
     }
 });
 
-// Eliminar todos los productos del carrito (no funciona)
+// Eliminar todos los productos del carrito (ok)
 router.delete("/:cid", async (req, res) => {
     const cartId = req.params.cid;
 

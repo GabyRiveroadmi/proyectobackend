@@ -132,6 +132,24 @@ class ProductManager {
             throw error;
         }
     }
+
+    async getProductById(id) {
+        try {
+            const arrayProductos = await this.leerArchivo();
+            
+    
+            if (!buscado) {
+                console.log("Producto no encontrado");
+                return null;
+            } else {
+                console.log("Producto encontrado");
+                return buscado;
+            }
+        } catch (error) {
+            console.log("Error al leer el archivo", error);
+            throw error;
+        }
+    }
 }
 
 export default ProductManager;
