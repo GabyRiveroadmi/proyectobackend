@@ -1,102 +1,120 @@
-import express from "express";
-import session from "express-session";
-//import router from "./routes.product";
 import { Router } from "express";
-import UserModel from "../models/user.model.js";
+const router = Router();
+import UsuarioModel from "../models/user.model.js";
+import { createHash, isValidPassword } from "../util/hashbcrypt.js";
+import passport from "passport";
+import jwt from "jsonwebtoken";
 
+//register: 
 
-const router = Router(); 
+router.post("/register", passport.authenticate("register", {
+    failureRedirect: "/failedregister"
+    }),
+    async (req, res) => {
+    const { usuario, password, first_name, last_name, email, age } = req.body;
 
-//register:
+    try{
+        const existeUsuario = await UsuarioModel.findOne({ usuario });
 
-router.post("/register", async (req, res) => {
-    const { first_name, last_name, email, password, age } = req.body;
-
-    try {
-        const existeUser = await UserModel.findOne({email: email}); 
-
-        if(existeUser) {
-            return res.status(400).send("El correo electronico ya esta registrado"); 
+        if (existeUsuario) {
+            return res.status(400).send("El usuario ya existe");
         }
-        const nuevoUser = await UserModel.create({first_name, last_name, email, password, age}); 
-
-        req.session.user = {...nuevoUser._doc}; 
-
-        res.status(200).send("Usuario creado con exito"); 
         
-    } catch (error) {
-        res.status(500).send("Error al registarse"); 
-    }
-})
+        const nuevoUsuario = new UsuarioModel({
+            usuario,
+            password: createHash(password), 
+            first_name,
+            last_name,
+            email,
+            age
+        })
 
-//login : 
+       
+        await nuevoUsuario.save();
+
+        
+        const token = jwt.sign(
+            { usuario: nuevoUsuario.usuario, rol: nuevoUsuario.rol }, 
+            "MiProyecto1", 
+            { expiresIn: "12h" }
+        );
+
+      
+        res.cookie("coderCookieToken", token, {
+            maxAge: 3600000, 
+            httpOnly: true 
+        });
+
+       
+        res.redirect("/api/sessions/current");
+
+    } catch (error) {
+       
+        console.log(error); 
+        res.status(500).send("Error de registro, verifique datos ingresados");
+    }
+});
+
+//Login
 
 router.post("/login", async (req, res) => {
-    const {email, password} = req.body; 
+    const { usuario, password } = req.body;
 
     try {
-        const usuario = await UserModel.findOne({email:email}); 
+         
+        const usuarioEncontrado = await UsuarioModel.findOne({ usuario });
 
-        if(usuario) {
-            if (usuario.password === password) {
-                req.session.user = {
-                    email: usuario.email, 
-                    age: usuario.age, 
-                    first_name: usuario.first_name, 
-                    last_name: usuario.last_name
-                }
-                res.redirect("/profile"); 
-            } else {
-                res.status(401).send("Password incorrecto"); 
-            }
-        } else {
-            res.status(404).send("Usuario no encontrado"); 
+        
+        if (!usuarioEncontrado) {
+            return res.status(401).send("Usuario no valido");
         }
+
+        if (!isValidPassword(password, usuarioEncontrado)) {
+            return res.status(401).send("Contraseña incorrecta");
+        }
+
+        const token = jwt.sign({ usuario: usuarioEncontrado.usuario, rol: usuarioEncontrado.rol }, "MiProyecto1", { expiresIn: "1h" });
+
+        res.cookie("coderCookieToken", token, {
+            maxAge: 3600000, 
+            httpOnly: true  
+        })
+
+        res.redirect("/api/sessions/current");
+
+
     } catch (error) {
-        res.status(500).send("Error de login"); 
+        res.status(500).send("Error interno, no es posible loguearse");
     }
 })
 
 
+//ruta current: 
 
-router.get("/session", (req, res) =>{
-   if(req.session.counter) {
-    req.session.counter++;
-    res.send("Visitaste este sitio: " +req.session.counter);
-   } else {
-     req.session.counter = 1;
-     res.send("Bienvenido");
-   }
-})
-
-router.get("/logout", (req, res) => {
-req.session.destroy( (error) => {
-if(!error) res.send("Sesion cerrada ok");
-else res.send("Existe un error")})}) 
-
-
-
-router.get("/login", (req, res) =>{
-    let {usuario, pass} = req.query;
-
-    if(usuario === "usuario1" && pass === "pass1234") {
-        req.session.user = usuario;
-        res.send("Inicio se sesion exitoso"); 
-    } else {
-        res.send("Datos incorrectos");
+router.get("/current", passport.authenticate("jwt", { session: false }), (req, res) => {
+    if (req.user) {
+        res.render("home", { usuario: req.user.usuario });
+    } else { 
+        res.status(401).send("No autorizado");
     }
 })
 
-function auth (req, res, next) {
-    if(req.session.user === "admi" && req.session.admin === true) {
-        return next();
-    }
-    return res.status(403).send("Error de autorizacion");
-}
+//logout
 
-router.get("/privado", auth, (req, res) =>{
-    res.send("Logueado en el sistema");
-
+router.post("/logout", (req, res) => {
+    
+    res.clearCookie("coderCookieToken");
+    res.redirect("/login"); 
 })
 
-export default router;
+
+//Ruta admins: 
+
+router.get("/admin", passport.authenticate("jwt", {session:false}), (req, res) => {
+    if(req.user.rol !== "admin") {
+        return res.status(403).send("Acceso denegado, solo para admininstradores"); 
+    } 
+    res.render("admin"); 
+})
+
+export default router; 

@@ -4,6 +4,8 @@ import CartManager from "../dao/db/cart-manager-db.js";
 
 const router = express.Router();
 
+//productos y carrito:
+
 const productManager = new ProductManager();
 const cartManager = new CartManager();
 
@@ -84,18 +86,30 @@ router.get("/product/:id", async (req, res) => {
 
 
 //rutas usuario:
-
 router.get("/login", (req, res) => {
+   if(req.session.login) {
+       return res.redirect("/login"); 
+   }
    res.render("login");
 })
 
 router.get("/register", (req, res) => {
+   if(req.session.login) {
+       return res.redirect("/register"); 
+   }
    res.render("register");
+
 })
 
-
 router.get("/profile", (req, res) => {
-   res.render("profile");
+   if(!req.session.login) {
+       return res.redirect("/login"); 
+   }
+   res.render("profile", {user: req.session.user});
+})
+
+router.get("/products", (req, res) => {
+   res.render("products", {user: req.session.user});
 })
 
 

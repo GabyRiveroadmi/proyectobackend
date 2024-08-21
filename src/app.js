@@ -11,6 +11,10 @@ import FileStore from "session-file-store";
 import MongoStore from "connect-mongo";
 import "./database.js";
 import sessionRouter from "./routes/session.routes.js";
+import initializePassport from "./config/passport.config.js";
+import passport from "passport";
+import jwt from "jsonwebtoken";
+
 
 const app = express();
 const PUERTO = 8080;
@@ -29,6 +33,11 @@ app.use(session({
       mongoUrl: "mongodb+srv://gabyriveroadmi1:Coder1234@cluster0.rrpbegd.mongodb.net/login?retryWrites=true&w=majority&appName=Cluster0"
     })
 }));
+
+initializePassport(); 
+app.use(passport.initialize()); 
+app.use(passport.session()); 
+initializePassport();
 
 
 app.engine("handlebars", engine()); 

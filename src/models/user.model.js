@@ -23,13 +23,13 @@ const schema = new mongoose.Schema({
         type: String,
         required: true
     },
-    cart: {
-        type: Number,
-        required: true
-    },
-    role: {
+    //cart: {type: Number,required: true},
+
+    rol: {
         type: String,
-        required: true
+        enum: [ "admin", "usuario"],
+        default: "usuario"
+        
     }
 })
 
