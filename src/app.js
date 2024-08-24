@@ -19,7 +19,7 @@ import jwt from "jsonwebtoken";
 const app = express();
 const PUERTO = 8080;
 const claveSecreta = "MiProyecto1";
-const fileStore = FileStore(session);
+
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -37,7 +37,7 @@ app.use(session({
 initializePassport(); 
 app.use(passport.initialize()); 
 app.use(passport.session()); 
-initializePassport();
+
 
 
 app.engine("handlebars", engine()); 

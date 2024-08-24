@@ -86,19 +86,22 @@ router.get("/product/:id", async (req, res) => {
 
 
 //rutas usuario:
+
+//login
 router.get("/login", (req, res) => {
    if(req.session.login) {
-       return res.redirect("/login"); 
+       return res.redirect("/profile"); 
    }
    res.render("login");
 })
 
+
+//register
 router.get("/register", (req, res) => {
    if(req.session.login) {
-       return res.redirect("/register"); 
+       return res.redirect("/profile"); 
    }
    res.render("register");
-
 })
 
 router.get("/profile", (req, res) => {

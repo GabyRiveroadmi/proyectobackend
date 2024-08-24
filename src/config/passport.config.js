@@ -1,20 +1,17 @@
 import passport from "passport";
-import local from "passport-local";
-import UserModel from "../models/user.model.js";
-import { createHash, isValidPassword } from "../util/hashbcrypt.js";
 import jwt from "passport-jwt";
 
-
-const JWTStrategy = jwt.Strategy;  
-const ExtractJwt = jwt.ExtractJwt; 
+const JWTStrategy = jwt.Strategy; 
+const ExtractJwt = jwt.ExtractJwt;
 
 const initializePassport = () => {
 
     const cookieExtractor = req => {
         let token = null; 
-       
+        
         if(req && req.cookies) {
             token = req.cookies["coderCookieToken"];
+            
         }
         return token;
     }
@@ -22,7 +19,7 @@ const initializePassport = () => {
     
     passport.use("jwt", new JWTStrategy({
         jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
-        secretOrKey: "coderhouse"
+        secretOrKey: "MiProyecto1"
         
     }, async (jwt_payload, done) => {
         try {
@@ -31,8 +28,6 @@ const initializePassport = () => {
             return done(error)
         }
     }))
-
-    
 
 }
 
