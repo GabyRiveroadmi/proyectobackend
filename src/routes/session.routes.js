@@ -80,7 +80,7 @@ router.post("/login", async (req, res) => {
 // Ruta current
 router.get("/current", passport.authenticate("jwt", { session: false }), (req, res) => {
     if (req.user) {
-        res.render("home", { usuario: req.user.first_name }); // Cambiado a first_name
+        res.render("home", { usuario: req.user.first_name }); 
     } else {
         res.status(401).send("No autorizado");
     }

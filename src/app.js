@@ -14,6 +14,8 @@ import sessionRouter from "./routes/session.routes.js";
 import initializePassport from "./config/passport.config.js";
 import passport from "passport";
 import jwt from "jsonwebtoken";
+//import configObject from "./config/config.js";
+import cors from "cors";
 
 
 const app = express();
@@ -33,6 +35,7 @@ app.use(session({
       mongoUrl: "mongodb+srv://gabyriveroadmi1:Coder1234@cluster0.rrpbegd.mongodb.net/login?retryWrites=true&w=majority&appName=Cluster0"
     })
 }));
+app.use(cors());
 
 initializePassport(); 
 app.use(passport.initialize()); 
@@ -49,6 +52,7 @@ app.use("/api/products", productsRouter);
 app.use("/api/carts", cartsRouter);
 app.use("/", viewsRouter);
 app.use("/api/sessions", sessionRouter);
+app.use("/productos", productsRouter);
 
 
 const httpServer = app.listen(PUERTO, () => {
@@ -77,4 +81,10 @@ socket.on("agregarProducto", async (producto) => {
 
   io.sockets.emit("productos", await productManager.getProducts());
     })
+})
+
+// const {PORT, MODE} = configObject; 
+
+process.on("uncaughtException", (error) => {
+console.log("Error en: ", error );
 })
