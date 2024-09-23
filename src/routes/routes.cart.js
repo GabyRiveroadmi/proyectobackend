@@ -1,6 +1,10 @@
 import express from "express";
 import CartManager from "../dao/db/cart-manager-db.js";
 import CartModel from "../dao/fs/data/cart.model.js";
+import ProductModel from "../models/productos.model.js";
+import UsuarioModel from "../models/user.model.js";
+import TicketModel from "../dao/fs/data/tickets.model.js";
+import { calcularTotal } from "../util/hashbcrypt.js";
 
 
 const router = express.Router();
@@ -75,7 +79,7 @@ router.post("/:cid/product/:pid", async (req, res) => {
     }
 });
 
-//eliminar del carrito el producto seleccionado (no funciona)
+//eliminar del carrito el producto seleccionado 
 
 router.delete("/:cid/product/:pid", async (req, res) => {
     const cartId = req.params.cid;
@@ -103,6 +107,55 @@ router.delete("/:cid", async (req, res) => {
     }
 });
 
+// BE II
 
+router.get("/:cid/purchase", async (req, res) => {
+    const carritoId = req.params.cid;
+    try {
+        const carrito = await CartModel.findById(carritoId);
+        const arrayProductos = carrito.products;
+
+        const productosNoDisponibles = [];
+
+        for (const item of arrayProductos) {
+            const productId = item.product;
+            const product = await ProductModel.findById(productId);
+            if (product.stock >= item.quantity) {
+                product.stock -= item.quantity;
+                await product.save();
+            } else {
+                productosNoDisponibles.push(productId);
+            }
+        } 
+
+        const usuarioDelCarrito = await UsuarioModel.findOne({cart: carritoId});
+
+        const ticket = new TicketModel({
+            purchase_datetime: new Date(), 
+            amount: calcularTotal(carrito.products),
+            purchaser: usuarioDelCarrito.email
+        })
+
+        await ticket.save(); 
+
+        carrito.products = carrito.products.filter(item => productosNoDisponibles.some(productoId => productoId.equals(item.product))); 
+
+        await carrito.save(); 
+
+    
+        res.json({
+            message: "Compra generada",
+            ticket: {
+                id: ticket._id,
+                amount: ticket.amount,
+                purchaser: ticket.purchaser
+            }, 
+            productosNoDisponibles
+        })
+
+    } catch (error) {
+        res.status(500).send("error al buscar carrito");
+    }
+})
 
 export default router;

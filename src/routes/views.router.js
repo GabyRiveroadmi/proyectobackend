@@ -1,6 +1,8 @@
 import express from "express";
 import ProductManager from "../dao/db/product-manager-db.js";
 import CartManager from "../dao/db/cart-manager-db.js";
+import { soloAdmin, soloUser } from "../middleware/auth.js";
+import passport from "passport";
 
 const router = express.Router();
 
@@ -10,7 +12,7 @@ const productManager = new ProductManager();
 const cartManager = new CartManager();
 
 
-router.get("/products", async (req, res) => {
+router.get("/products", passport.authenticate("jwt", {session: false}),  soloUser ,async (req, res) => {
    try {
       const { page = 1, limit = 2 } = req.query;
       const productos = await productManager.getProducts({
@@ -115,5 +117,8 @@ router.get("/products", (req, res) => {
    res.render("products", {user: req.session.user});
 })
 
+router.get("/realtimeproducts",passport.authenticate("jwt", {session: false}) ,soloAdmin ,(req, res) => {
+   res.render("realtimeproducts"); 
+})
 
 export default router;

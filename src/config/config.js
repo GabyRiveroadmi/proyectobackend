@@ -1,17 +1,29 @@
-import dotenv from "dotenv"; 
-import program from "../util/commander.js"; 
+import passport from "passport";
+import jwt from "passport-jwt";
 
+const JWTStrategy = jwt.Strategy;
+const ExtractJwt = jwt.ExtractJwt;
 
-const {mode} = program.opts(); 
-dotenv.config({
-    path: mode === "desarrollo"?"./.env.desarrollo":"./.env.produccion"
-}); 
-
-
-const configObject = {
-    PUERTO: process.env.PUERTO, 
-    MONGO_URL: process.env.MONGO_URL,
-    persistence: process.env.PERSISTENCE || "memory"
+const initializePassport = () => {
+    passport.use("jwt", new JWTStrategy({
+        jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
+        secretOrKey: "MiProyecto1"
+    }, async (jwt_payload, done) => {
+        try {
+            return done(null, jwt_payload);
+        } catch (error) {
+            return done(error);
+        }
+    }))
 }
 
-export default configObject; 
+const cookieExtractor = (req) => {
+    let token = null;
+    if(req && req.cookies) {
+        token = req.cookies["jwtToken"]
+    }
+    return token;
+}
+
+export default initializePassport;
+

@@ -1,5 +1,5 @@
 import ProductoRepository from "../repository/ProductoRepository.js";
-import DAO from "../dao/factory.js"; 
+
 
 class ProductoService {
     constructor(productoRepository) {
@@ -15,4 +15,4 @@ class ProductoService {
     }
 }
 
-export const productoService = new ProductoService( new ProductoRepository(DAO)); 
+export const productoService = new ProductoService(new ProductoRepository());
